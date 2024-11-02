@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from .models import *
 from .serializers import UserSerializer, AdminSerializer
+from django.contrib.auth.hashers import check_password, make_password
 
 # Create your views here.
 def home(request):
@@ -128,3 +129,30 @@ class AdminAPIView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Admin.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        
+class UserLoginAPIView(APIView):
+    def post(self, request):
+        contact = request.data.get('contact')
+        password = request.data.get('password')
+
+        try:
+            user = User.objects.get(contact=contact)
+            if user.password == "":
+                user.password = make_password(password)  
+                user.save()  
+
+            if check_password(password, user.password):
+                return Response({"message": "Login successful!"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Invalid password."}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            user_data = {
+                'contact': contact,
+                'password': make_password(password), 
+                **request.data
+            }
+            serializer = UserSerializer(data=user_data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"message": "User registered successfully!"}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import *
+from django.contrib.auth.hashers import make_password
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,6 +24,10 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"contact": "Contact number must be exactly 10 digits and contain only numeric values."})
         
         return data
+    
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])  
+        return super().create(validated_data)
     
 class AdminSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())  
