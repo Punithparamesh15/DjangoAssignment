@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from .models import *
 from .serializers import UserSerializer, AdminSerializer
 from django.contrib.auth.hashers import check_password, make_password
+from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # Create your views here.
 def home(request):
@@ -130,7 +132,7 @@ class AdminAPIView(APIView):
         except Admin.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
-class UserLoginAPIView(APIView):
+"""class UserLoginAPIView(APIView):
     def post(self, request):
         contact = request.data.get('contact')
         password = request.data.get('password')
@@ -155,4 +157,63 @@ class UserLoginAPIView(APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response({"message": "User registered successfully!"}, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)"""
+
+"""class UserLoginAPIView(APIView):
+    def post(self, request):
+        contact = request.data.get('contact')
+        password = request.data.get('password')
+
+        try:
+            user = User.objects.get(contact=contact)
+
+            if check_password(password, user.password):
+                token, created = Token.objects.get_or_create(user=user)
+                user_data = UserSerializer(user).data
+                return Response({
+                    "token": token.key,
+                    "user": user_data
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Invalid password."}, status=status.HTTP_400_BAD_REQUEST)
+
+        except User.DoesNotExist:
+            return Response({"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)"""
+
+class UserLoginAPIView(APIView):
+
+    def post(self, request):
+        contact = request.data.get('contact')
+        password = request.data.get('password')
+
+        try:
+            user = User.objects.get(contact=contact)
+            
+            if check_password(password, user.password):
+
+                # Generate JWT Token
+                refresh = RefreshToken.for_user(user)
+                access_token = refresh.access_token
+                
+                user_data = UserSerializer(user).data
+                return Response({
+                    "access_token": str(access_token),              # Access token for authentication
+                    "user": user_data
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Invalid password."}, status=status.HTTP_400_BAD_REQUEST)
+
+        except User.DoesNotExist:
+            return Response({"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        
+"""class UserDetailAPIView(APIView):
+    authentication_classes = [JWTAuthentication]  # Use JWT authentication for this view
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access this view
+
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=200)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=404)"""
