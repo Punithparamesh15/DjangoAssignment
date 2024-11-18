@@ -39,10 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'userdetails',
-    'rest_framework.authtoken',
-    'rest_framework_simplejwt',
-    
+    'rest_framework.authtoken',   # Token authentication
+    'rest_framework_simplejwt',  # JWT Authentication
 ]
+
+AUTH_USER_MODEL = 'userdetails.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -129,11 +130,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # 'rest_framework.authentication.TokenAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',              # Token-based authentication
+        #'rest_framework_simplejwt.authentication.JWTAuthentication',     # JWT Authentication
     ],
-
-    #'DEFAULT_PERMISSION_CLASSES': [
-    #    'rest_framework.permissions.IsAuthenticated',  # Make all views require authentication by default
-    #]
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }
+
